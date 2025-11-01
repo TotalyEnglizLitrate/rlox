@@ -272,11 +272,11 @@ impl Token {
                     }
                 }
                 '!' => {
-                    if c == '=' {
+                    if c != '=' {
+                        toks.push(Token::Operator(Operator::BANG));
+                    } else {
                         toks.push(Token::Operator(Operator::NE));
                         return ParseCharResult::Tokens(toks);
-                    } else {
-                        toks.push(Token::Operator(Operator::BANG));
                     }
                 }
 
