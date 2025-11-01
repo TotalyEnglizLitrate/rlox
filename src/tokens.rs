@@ -176,7 +176,7 @@ impl Token {
         while let Some(c) = src_iter.peek() {
             if c.is_digit(10) || c == &'.' {
                 number.push(src_iter.next().unwrap());
-            } else if c.is_whitespace() || c == &'\n' {
+            } else if c.is_whitespace() || "&()[]{}(),;+-*/!=><=".contains(*c) {
                 break;
             } else {
                 return Err(Error::new(
@@ -267,7 +267,6 @@ impl Token {
                 '/' => {
                     if c != '/' {
                         toks.push(Token::Operator(Operator::SLASH));
-                        return ParseCharResult::Tokens(toks);
                     } else {
                         return ParseCharResult::COMMENT;
                     }
