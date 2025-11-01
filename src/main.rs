@@ -43,6 +43,7 @@ fn run_file(path: &PathBuf) {
         .expect("Unable to open file")
         .read_to_string(&mut src)
         .expect("Unable to read file");
+    src.push('\0');
 
     run(&src, false);
 }
@@ -59,6 +60,8 @@ fn run_interpreter() {
         if line.is_empty() {
             break;
         }
+
+        line.push('\0');
 
         run(&line, true);
 

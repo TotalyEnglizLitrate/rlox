@@ -165,7 +165,6 @@ impl Token {
         if errors.len() != 0 {
             Err(errors)
         } else {
-            tokens.push(Token::EOF);
             Ok(tokens)
         }
     }
@@ -313,6 +312,7 @@ impl Token {
             '.' => toks.push(Token::Operator(Operator::DOT)),
             '-' => toks.push(Token::Operator(Operator::MINUS)),
             '+' => toks.push(Token::Operator(Operator::PLUS)),
+            '\0' => toks.push(Token::EOF),
             '!' | '=' | '>' | '<' | '/' => return ParseCharResult::ADDCTX(toks),
             '"' => return ParseCharResult::STRING(toks),
             _ => {
