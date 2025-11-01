@@ -19,6 +19,7 @@ pub enum Punctuator {
     RBrace,
     COMMA,
     SEMICOLON,
+    SPACE,
 }
 
 #[derive(Debug)]
@@ -87,6 +88,10 @@ impl Token {
         'main: while let Some(c) = src_iter.next() {
             match c {
                 ' ' | '\r' | '\t' => {
+                    if let Some(Token::Punctuator(Punctuator::SPACE)) = tokens.last() {
+                    } else {
+                        tokens.push(Token::Punctuator(Punctuator::SPACE));
+                    }
                     continue;
                 }
                 '\n' => {
