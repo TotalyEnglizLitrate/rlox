@@ -174,17 +174,10 @@ impl Token {
         let mut number = String::new();
         number.push(first_char);
         while let Some(c) = src_iter.peek() {
-            if c.is_digit(10) || c == &'.' {
+            if c.is_ascii_digit() || c == &'.' {
                 number.push(src_iter.next().unwrap());
-            } else if c.is_whitespace() || "&()[]{}(),;+-*/!=><=".contains(*c) {
-                break;
             } else {
-                return Err(Error::new(
-                    0,
-                    "".into(),
-                    "Invalid character in number literal".into(),
-                    ErrorKind::SyntaxError,
-                ));
+                break;
             }
         }
 
@@ -323,7 +316,7 @@ impl Token {
             '!' | '=' | '>' | '<' | '/' => return ParseCharResult::ADDCTX(toks),
             '"' => return ParseCharResult::STRING(toks),
             _ => {
-                if c.is_digit(10) {
+                if c.is_ascii_digit() {
                     return ParseCharResult::NUM(toks);
                 } else if c.is_ascii_alphabetic() || c == '_' {
                     return ParseCharResult::IdentOrKeyword(toks);
