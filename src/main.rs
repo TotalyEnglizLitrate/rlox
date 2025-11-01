@@ -6,10 +6,11 @@ use std::{
 
 use clap::Parser;
 
-use crate::tokens::Token;
-
+mod ast;
 mod error;
 mod tokens;
+
+use crate::tokens::Token;
 
 #[derive(Parser)]
 #[command(about = "lox - from crafting interpreters")]
@@ -31,10 +32,11 @@ fn main() {
 fn run(src: &str, interpreted: bool) {
     let tokens = Token::from_str(src);
     match tokens {
-    Ok(tokens) => println!("{:?}", tokens),
-    Err(errors) => {
-        errors.iter().for_each(|e| e.report(interpreted));
-    }}
+        Ok(tokens) => println!("{:?}", tokens),
+        Err(errors) => {
+            errors.iter().for_each(|e| e.report(interpreted));
+        }
+    }
 }
 
 fn run_file(path: &PathBuf) {
