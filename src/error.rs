@@ -1,6 +1,7 @@
 #[derive(Debug)]
 pub enum ErrorKind {
     SyntaxError,
+    TypeError
 }
 
 pub struct Error {
@@ -33,8 +34,11 @@ impl Error {
 
     pub fn report(&self, interpreted: bool) {
         eprintln!("{}", self.message(interpreted));
-        if !interpreted {
-            std::process::exit(65);
+    }
+
+    pub fn contextualize(&mut self, src: &str) {
+        if let Some(line_content) = src.lines().nth(self.line - 1) {
+            self.content = line_content.to_string();
         }
     }
 }

@@ -1,6 +1,6 @@
 use std::{
     fs::File,
-    io::{BufRead, BufReader, Read, Write, stdin, stdout},
+    io::{BufRead, Read, Write, stdin, stdout},
     path::PathBuf,
 };
 
@@ -10,7 +10,7 @@ mod ast;
 mod error;
 mod tokens;
 
-use crate::tokens::Token;
+use crate::tokens::{Token, TokenCtx};
 
 #[derive(Parser)]
 #[command(about = "lox - from crafting interpreters")]
@@ -30,13 +30,37 @@ fn main() {
 }
 
 fn run(src: &str, interpreted: bool) {
-    let tokens = Token::from_str(src);
-    match tokens {
-        Ok(tokens) => println!("{:?}", tokens),
+    let tokens = match TokenCtx::from_str(src) {
+        Ok(tokens) => tokens.into_boxed_slice(),
         Err(errors) => {
             errors.iter().for_each(|e| e.report(interpreted));
+            if interpreted {
+                return;
+            } else {
+                std::process::exit(65);
+            }
         }
-    }
+    };
+
+    println!("{:?}", tokens);
+
+    let ast = match ast::scanner::Scanner::new(tokens).parse_expression() {
+        Ok(Some(ast)) => ast,
+        Ok(None) => return,
+        Err(mut errors) => {
+            errors.iter_mut().for_each(|e| {
+                e.contextualize(src);
+                e.report(interpreted);
+            });
+            if interpreted {
+                return;
+            } else {
+                std::process::exit(65);
+            }
+        }
+    };
+
+    println!("{:?}", ast);
 }
 
 fn run_file(path: &PathBuf) {
@@ -51,19 +75,32 @@ fn run_file(path: &PathBuf) {
 }
 
 fn run_interpreter() {
-    let mut reader = BufReader::new(stdin().lock());
+    let mut reader = stdin().lock();
     let mut line = String::new();
 
     loop {
         print!(">> ");
         stdout().flush().expect("Error flushing output!");
-        reader.read_line(&mut line).expect("Error reading input!");
 
-        if line.is_empty() {
-            break;
+        match reader.read_line(&mut line) {
+            Ok(0) => {
+                println!();
+                break;
+            }
+
+            Ok(_) => {
+                line = line.trim().to_string();
+                if line.is_empty() {
+                    continue;
+                }
+                line.push('\0');
+            }
+
+            Err(_) => {
+                eprintln!("Error reading input!");
+                break;
+            }
         }
-
-        line.push('\0');
 
         run(&line, true);
 
