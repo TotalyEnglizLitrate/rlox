@@ -18,8 +18,6 @@ pub enum Token {
     Operator(Operator),
     Literal(Literal),
     Keyword(Keyword),
-    EndGrouping,
-    ParseError,
     EOF,
 }
 
