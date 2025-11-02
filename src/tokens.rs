@@ -218,7 +218,7 @@ impl TokenCtx {
         }
 
         match number.parse::<f64>() {
-            Ok(num) => Ok(Token::Literal(Literal::NUMBER(num))),
+            Ok(num) => Ok(num.into()),
             Err(_) => Err(Error::new(
                 0,
                 "".into(),
@@ -267,7 +267,7 @@ impl TokenCtx {
         let mut s = String::new();
         while let Some(c) = src_iter.next() {
             if c == '"' {
-                return Ok(Token::Literal(Literal::STRING(s)));
+                return Ok(Token::Literal(s.into()));
             }
 
             if c == '\n' {
@@ -375,23 +375,11 @@ impl TokenCtx {
 impl Literal {
     pub(crate) fn truthy(&self) -> Self {
         match self {
-            Self::STRING(s) => {
-                if s.is_empty() {
-                    Self::TRUE
-                } else {
-                    Self::FALSE
-                }
-            }
-            Self::NUMBER(num) => {
-                if num == &0f64 {
-                    Self::TRUE
-                } else {
-                    Self::FALSE
-                }
-            }
+            Self::STRING(s) => s.is_empty().into(),
+            Self::NUMBER(num) => (num == &0f64).into(),
             Self::NIL => Self::FALSE,
+            Self::TRUE | Self::FALSE => self.clone(),
             Self::IDENT(_) => unimplemented!(),
-            _ => self.clone(),
         }
     }
 
@@ -401,8 +389,9 @@ impl Literal {
             Self::STRING(_) => "string",
             Self::FALSE | Self::TRUE => "Boolean",
             Self::NIL => "nil",
-            Self::IDENT(_) => unimplemented!()
-        }).into()
+            Self::IDENT(_) => unimplemented!(),
+        })
+        .into()
     }
 }
 
@@ -412,7 +401,7 @@ impl Not for &Literal {
         match self.truthy() {
             Literal::TRUE => Literal::FALSE,
             Literal::FALSE => Literal::TRUE,
-            _ => unimplemented!(),
+            _ => unreachable!(),
         }
     }
 }
@@ -423,8 +412,8 @@ impl Add for &Literal {
         match (self, rhs) {
             (Literal::NUMBER(x), Literal::NUMBER(y)) => Some(Literal::NUMBER(x + y)),
             (Literal::STRING(x), Literal::STRING(y)) => Some(Literal::STRING(x.clone() + y)),
-            (Literal::IDENT(_), Literal::IDENT(_)) => unimplemented!(),
-            _ => None
+            (Literal::IDENT(_), Literal::IDENT(_)) => todo!(),
+            _ => None,
         }
     }
 }
@@ -434,7 +423,7 @@ impl Neg for &Literal {
     fn neg(self) -> Self::Output {
         match self {
             Literal::NUMBER(x) => Some(Literal::NUMBER(-x)),
-            _ => None
+            _ => None,
         }
     }
 }
@@ -444,7 +433,7 @@ impl Sub for &Literal {
     fn sub(self, rhs: Self) -> Self::Output {
         match (self, rhs) {
             (Literal::NUMBER(x), Literal::NUMBER(y)) => Some(Literal::NUMBER(x - y)),
-            _ => None
+            _ => None,
         }
     }
 }
@@ -454,7 +443,7 @@ impl Mul for &Literal {
     fn mul(self, rhs: Self) -> Self::Output {
         match (self, rhs) {
             (Literal::NUMBER(x), Literal::NUMBER(y)) => Some(Literal::NUMBER(x * y)),
-            _ => None
+            _ => None,
         }
     }
 }
@@ -464,7 +453,88 @@ impl Div for &Literal {
     fn div(self, rhs: Self) -> Self::Output {
         match (self, rhs) {
             (Literal::NUMBER(x), Literal::NUMBER(y)) => Some(Literal::NUMBER(x / y)),
-            _ => None
+            _ => None,
         }
+    }
+}
+
+impl PartialEq for &Literal {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Literal::NUMBER(x), Literal::NUMBER(y)) => x == y,
+            (Literal::STRING(x), Literal::STRING(y)) => x == y,
+            (Literal::IDENT(_), Literal::IDENT(_)) => todo!(),
+            (Literal::NIL, Literal::NIL)
+            | (Literal::FALSE, Literal::FALSE)
+            | (Literal::TRUE, Literal::TRUE) => true,
+            _ => false,
+        }
+    }
+
+    fn ne(&self, other: &Self) -> bool {
+        !self.eq(other)
+    }
+}
+
+impl PartialOrd for &Literal {
+    fn partial_cmp(&self, _other: &Self) -> Option<std::cmp::Ordering> {
+        None
+    }
+
+    fn le(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Literal::NUMBER(x), Literal::NUMBER(y)) => x <= y,
+            (Literal::STRING(x), Literal::STRING(y)) => x <= y,
+            (Literal::IDENT(_), Literal::IDENT(_)) => todo!(),
+            _ => false
+        }
+    }
+
+    fn lt(&self, other: &Self) -> bool {
+        self != other && self.le(other)
+    }
+
+    fn gt(&self, other: &Self) -> bool {
+        !self.le(other)
+    }
+
+    fn ge(&self, other: &Self) -> bool {
+        self == other || self.gt(other)
+    }
+}
+
+impl From<bool> for Literal {
+    fn from(value: bool) -> Self {
+        if value { Self::TRUE } else { Self::FALSE }
+    }
+}
+
+impl From<bool> for Token {
+    fn from(value: bool) -> Self {
+        Self::Literal(value.into())
+    }
+}
+
+impl From<f64> for Literal {
+    fn from(value: f64) -> Self {
+        Self::NUMBER(value)
+    }
+}
+
+impl From<f64> for Token {
+    fn from(value: f64) -> Self {
+        Self::Literal(value.into())
+    }
+}
+
+impl From<String> for Literal {
+    fn from(value: String) -> Self {
+        Self::STRING(value)
+    }
+}
+
+impl From<String> for Token {
+    fn from(value: String) -> Self {
+        Self::Literal(value.into())
     }
 }

@@ -106,6 +106,8 @@ impl Expr {
             Operator::PLUS => (left + right).ok_or(Expr::op_error(right, left, op, line)),
             Operator::STAR => (left * right).ok_or(Expr::op_error(right, left, op, line)),
             Operator::SLASH => (left / right).ok_or(Expr::op_error(right, left, op, line)),
+            Operator::EQ => Ok((left == right).into()),
+            Operator::NE => Ok((left != right).into()),
             _ => todo!(),
         }
     }
