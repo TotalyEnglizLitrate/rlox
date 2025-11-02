@@ -485,8 +485,7 @@ impl PartialOrd for &Literal {
         match (self, other) {
             (Literal::NUMBER(x), Literal::NUMBER(y)) => x <= y,
             (Literal::STRING(x), Literal::STRING(y)) => x <= y,
-            (Literal::IDENT(_), Literal::IDENT(_)) => todo!(),
-            _ => false
+            _ => panic!()
         }
     }
 

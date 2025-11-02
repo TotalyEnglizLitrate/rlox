@@ -12,7 +12,6 @@ pub struct Scanner {
     tokens: Box<[TokenCtx]>,
     pos: usize,
     errors: Vec<Error>,
-    opened_parens: usize,
 }
 
 impl Scanner {
@@ -177,7 +176,6 @@ impl Scanner {
             tokens,
             pos: 0,
             errors: Vec::new(),
-            opened_parens: 0,
         }
     }
 

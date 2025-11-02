@@ -10,7 +10,7 @@ mod ast;
 mod error;
 mod tokens;
 
-use crate::tokens::{Token, TokenCtx};
+use crate::{error::Error, tokens::TokenCtx};
 
 #[derive(Parser)]
 #[command(about = "lox - from crafting interpreters")]
@@ -29,17 +29,23 @@ fn main() {
     }
 }
 
+fn print_errs(src: &str, err: std::slice::IterMut<Error>, contextualise: bool, interpreted: bool) {
+    for e in err {
+        if contextualise {
+            e.contextualize(src);
+        }
+        e.report(interpreted);
+    }
+
+    if !interpreted {
+        std::process::exit(65);
+    }
+}
+
 fn run(src: &str, interpreted: bool) {
     let tokens = match TokenCtx::from_str(src) {
         Ok(tokens) => tokens.into_boxed_slice(),
-        Err(errors) => {
-            errors.iter().for_each(|e| e.report(interpreted));
-            if interpreted {
-                return;
-            } else {
-                std::process::exit(65);
-            }
-        }
+        Err(mut err) =>  {print_errs(src, err.iter_mut(), false, interpreted); return;},
     };
 
     println!("{:?}", tokens);
@@ -47,20 +53,15 @@ fn run(src: &str, interpreted: bool) {
     let ast = match ast::scanner::Scanner::new(tokens).parse_expression() {
         Ok(Some(ast)) => ast,
         Ok(None) => return,
-        Err(mut errors) => {
-            errors.iter_mut().for_each(|e| {
-                e.contextualize(src);
-                e.report(interpreted);
-            });
-            if interpreted {
-                return;
-            } else {
-                std::process::exit(65);
-            }
-        }
+        Err(mut err) => {print_errs(src, err.iter_mut(), true, interpreted); return;}
     };
 
     println!("{:?}", ast);
+
+    match ast.evaluate() {
+        Ok(lit) => println!("{:?}", lit),
+        Err(err) => {print_errs(src, vec![err].iter_mut(), true, interpreted);}
+    }
 }
 
 fn run_file(path: &PathBuf) {

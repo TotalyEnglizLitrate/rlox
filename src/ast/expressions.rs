@@ -56,6 +56,13 @@ impl Expr {
                     unreachable!()
                 }
             }
+            Expr::Binary { left, operator, right } => {
+                if let Token::Operator(op) = operator.token {
+                    Self::eval_binary(&right.evaluate()?, &left.evaluate()?, &op, operator.line)
+                } else {
+                    unreachable!()
+                }
+            }
             _ => todo!(),
         }
     }
@@ -101,14 +108,33 @@ impl Expr {
         op: &Operator,
         line: usize,
     ) -> Result<Literal, Error> {
-        match op {
+        let res = std::panic::catch_unwind(|| match op {
             Operator::MINUS => (left - right).ok_or(Expr::op_error(right, left, op, line)),
             Operator::PLUS => (left + right).ok_or(Expr::op_error(right, left, op, line)),
             Operator::STAR => (left * right).ok_or(Expr::op_error(right, left, op, line)),
             Operator::SLASH => (left / right).ok_or(Expr::op_error(right, left, op, line)),
             Operator::EQ => Ok((left == right).into()),
             Operator::NE => Ok((left != right).into()),
+            Operator::GREATER => Ok((left > right).into()),
+            Operator::LESSER => Ok((left < right).into()),
+            Operator::GE => Ok((left >= right).into()),
+            Operator::LE => Ok((left <= right).into()),
             _ => todo!(),
+        });
+
+        match res {
+            Ok(res) => res,
+            Err(_) => Err(Error::new(
+                line,
+                "".into(),
+                format!(
+                    "Unsupported operation {:?} between types {} and {}",
+                    op,
+                    left.get_type(),
+                    right.get_type()
+                ),
+                ErrorKind::TypeError,
+            )),
         }
     }
 }
