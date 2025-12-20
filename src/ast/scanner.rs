@@ -1,4 +1,4 @@
-use super::expressions::Expr;
+use super::expr::Expr;
 use crate::error::{Error, ErrorKind};
 use crate::tokens::{Keyword, Literal, Operator, Punctuator, Token, TokenCtx};
 

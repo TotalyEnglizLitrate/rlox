@@ -59,7 +59,7 @@ fn run(src: &str, interpreted: bool) {
     println!("{:?}", ast);
 
     match ast.evaluate() {
-        Ok(lit) => println!("{:?}", lit),
+        Ok(lit) => println!("{}", &lit),
         Err(err) => {print_errs(src, vec![err].iter_mut(), true, interpreted);}
     }
 }

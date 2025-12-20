@@ -1,2 +1,3 @@
-pub mod expressions;
+pub mod expr;
 pub mod scanner;
+pub mod stmt;

@@ -63,7 +63,14 @@ impl Expr {
                     unreachable!()
                 }
             }
-            _ => todo!(),
+
+            Expr::Literal { value } => {
+                if let Token::Literal(value) = value.token {
+                    Ok(value)
+                } else {
+                    unreachable!()
+                }
+            },
         }
     }
 

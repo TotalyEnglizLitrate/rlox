@@ -1,7 +1,5 @@
 use std::{
-    iter::Peekable,
-    ops::{Add, Div, Mul, Neg, Not, Sub},
-    str::Chars,
+    fmt::Display, iter::Peekable, ops::{Add, Div, Mul, Neg, Not, Sub}, str::Chars
 };
 
 use crate::error::{Error, ErrorKind};
@@ -535,5 +533,24 @@ impl From<String> for Literal {
 impl From<String> for Token {
     fn from(value: String) -> Self {
         Self::Literal(value.into())
+    }
+}
+
+impl Into<String> for &Literal {
+    fn into(self) -> String {
+        match self {
+            Literal::NUMBER(x) => x.to_string(),
+            Literal::STRING(x) => x.clone(),
+            Literal::TRUE => "true".into(),
+            Literal::FALSE => "false".into(),
+            Literal::NIL => "nil".into(),
+            Literal::IDENT(_) => unimplemented!(),
+        }
+    }
+}
+
+impl Display for Literal {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", <&Literal as Into<String>>::into(self))
     }
 }
