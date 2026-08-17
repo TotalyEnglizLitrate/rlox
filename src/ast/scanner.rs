@@ -166,7 +166,10 @@ impl Scanner {
             self.synchronize();
 
             Box::new(Expr::Literal {
-                value: Box::new(TokenCtx {token: Token::Literal(Literal::NIL), ..tok}),
+                value: Box::new(TokenCtx {
+                    token: Token::Literal(Literal::NIL),
+                    ..tok
+                }),
             })
         }
     }

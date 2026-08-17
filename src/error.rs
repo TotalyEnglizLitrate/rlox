@@ -1,7 +1,7 @@
 #[derive(Debug)]
 pub enum ErrorKind {
     SyntaxError,
-    TypeError
+    TypeError,
 }
 
 pub struct Error {

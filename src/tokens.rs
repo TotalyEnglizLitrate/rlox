@@ -1,5 +1,9 @@
 use std::{
-    cmp::Ordering, fmt::Display, iter::Peekable, ops::{Add, Div, Mul, Neg, Not, Sub}, str::Chars
+    cmp::Ordering,
+    fmt::Display,
+    iter::Peekable,
+    ops::{Add, Div, Mul, Neg, Not, Sub},
+    str::Chars,
 };
 
 use crate::error::{Error, ErrorKind};
@@ -474,14 +478,18 @@ impl PartialOrd for Literal {
         match (self, other) {
             (Literal::NUMBER(x), Literal::NUMBER(y)) => x.partial_cmp(y),
             (Literal::STRING(x), Literal::STRING(y)) => x.partial_cmp(y),
-            _ => None
+            _ => None,
         }
     }
 }
 
 impl From<bool> for Literal {
     fn from(value: bool) -> Self {
-        if value { Self::TRUE } else { Self::FALSE }
+        if value {
+            Self::TRUE
+        } else {
+            Self::FALSE
+        }
     }
 }
 

@@ -126,16 +126,20 @@ impl Expr {
             Operator::SLASH => (left / right).ok_or_else(|| Expr::op_error(left, right, op, line)),
             Operator::EQ => Ok((left == right).into()),
             Operator::NE => Ok((left != right).into()),
-            Operator::GREATER => left.partial_cmp(right)
+            Operator::GREATER => left
+                .partial_cmp(right)
                 .ok_or_else(|| Expr::op_error(left, right, op, line))
                 .map(|ord| (ord == Ordering::Greater).into()),
-            Operator::LESSER => left.partial_cmp(right)
+            Operator::LESSER => left
+                .partial_cmp(right)
                 .ok_or_else(|| Expr::op_error(left, right, op, line))
                 .map(|ord| (ord == Ordering::Less).into()),
-            Operator::GE => left.partial_cmp(right)
+            Operator::GE => left
+                .partial_cmp(right)
                 .ok_or_else(|| Expr::op_error(left, right, op, line))
                 .map(|ord| matches!(ord, Ordering::Greater | Ordering::Equal).into()),
-            Operator::LE => left.partial_cmp(right)
+            Operator::LE => left
+                .partial_cmp(right)
                 .ok_or_else(|| Expr::op_error(left, right, op, line))
                 .map(|ord| matches!(ord, Ordering::Less | Ordering::Equal).into()),
             _ => todo!(),

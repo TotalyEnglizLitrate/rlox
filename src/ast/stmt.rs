@@ -7,7 +7,7 @@ pub enum Stmt {
     If {
         cond: Box<Expr>,
         block: Vec<Box<Expr>>,
-    }
+    },
 }
 
 #[derive(Debug)]
