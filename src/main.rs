@@ -4,7 +4,7 @@ use std::{
     path::PathBuf,
 };
 
-use clap::Parser;
+use clap::{ArgAction::SetTrue, Parser};
 
 mod ast;
 mod error;
@@ -17,15 +17,17 @@ use crate::{error::Error, tokens::TokenCtx};
 struct CliOptions {
     #[arg()]
     input_file: Option<PathBuf>,
+    #[arg(short, long, default_value_t = false, action = SetTrue)]
+    debug: bool
 }
 
 fn main() {
     let args = CliOptions::parse();
 
     if let Some(file) = args.input_file {
-        run_file(&file);
+        run_file(&file, args.debug);
     } else {
-        run_interpreter();
+        run_interpreter(args.debug);
     }
 }
 
@@ -42,7 +44,7 @@ fn print_errs(src: &str, err: std::slice::IterMut<Error>, contextualise: bool, i
     }
 }
 
-fn run(src: &str, interpreted: bool) {
+fn run(src: &str, interpreted: bool, debug: bool) {
     let tokens = match TokenCtx::from_str(src) {
         Ok(tokens) => tokens.into_boxed_slice(),
         Err(mut err) => {
@@ -51,7 +53,7 @@ fn run(src: &str, interpreted: bool) {
         }
     };
 
-    println!("{:?}", tokens);
+    if debug {println!("{:?}", tokens);}
 
     let ast = match ast::scanner::Scanner::new(tokens).parse_expression() {
         Ok(Some(ast)) => ast,
@@ -62,7 +64,7 @@ fn run(src: &str, interpreted: bool) {
         }
     };
 
-    println!("{:?}", ast);
+    if debug {println!("{:?}", ast);}
 
     match ast.evaluate() {
         Ok(lit) => println!("{}", &lit),
@@ -72,7 +74,7 @@ fn run(src: &str, interpreted: bool) {
     }
 }
 
-fn run_file(path: &PathBuf) {
+fn run_file(path: &PathBuf, debug: bool) {
     let mut src = String::new();
     File::open(path)
         .expect("Unable to open file")
@@ -80,10 +82,10 @@ fn run_file(path: &PathBuf) {
         .expect("Unable to read file");
     src.push('\0');
 
-    run(&src, false);
+    run(&src, false, debug);
 }
 
-fn run_interpreter() {
+fn run_interpreter(debug: bool) {
     let mut reader = stdin().lock();
     let mut line = String::new();
 
@@ -111,7 +113,7 @@ fn run_interpreter() {
             }
         }
 
-        run(&line, true);
+        run(&line, true, debug);
 
         line.clear();
     }
