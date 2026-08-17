@@ -1,80 +1,47 @@
-use std::{cmp::Ordering, ops::Deref};
+use std::cmp::Ordering;
 
 use crate::{
     error::{Error, ErrorKind},
-    tokens::{Literal, Operator, Token, TokenCtx},
+    tokens::{Literal, Operator},
 };
 
 #[derive(Debug)]
 pub enum Expr {
     Binary {
         left: Box<Expr>,
-        operator: Box<TokenCtx>,
+        operator: Operator,
+        line: usize,
         right: Box<Expr>,
     },
     Grouping {
         expression: Box<Expr>,
     },
     Literal {
-        value: Box<TokenCtx>,
+        value: Literal,
     },
     Unary {
-        operator: Box<TokenCtx>,
+        operator: Operator,
+        line: usize,
         right: Box<Expr>,
     },
 }
 
 impl Expr {
-    pub fn validate(&self) -> bool {
-        match self {
-            Expr::Binary {
-                left,
-                operator,
-                right,
-            } => {
-                matches!(operator.deref().token, Token::Operator(_))
-                    && left.validate()
-                    && right.validate()
-            }
-            Expr::Grouping { expression } => expression.validate(),
-            Expr::Literal { value } => matches!(value.deref().token, Token::Literal(_)),
-            Expr::Unary { operator, right } => {
-                matches!(operator.deref().token, Token::Operator(_)) && right.validate()
-            }
-        }
-    }
-
     pub fn evaluate(self) -> Result<Literal, Error> {
-        (!self.validate()).then(|| panic!("Error in constructed ast"));
-
         match self {
             Expr::Grouping { expression } => expression.evaluate(),
-            Expr::Unary { operator, right } => {
-                if let Token::Operator(op) = operator.token {
-                    Self::eval_unary(&op, &right.evaluate()?, operator.line)
-                } else {
-                    unreachable!()
-                }
-            }
+            Expr::Unary {
+                operator,
+                line,
+                right,
+            } => Self::eval_unary(&operator, &right.evaluate()?, line),
             Expr::Binary {
                 left,
                 operator,
+                line,
                 right,
-            } => {
-                if let Token::Operator(op) = operator.token {
-                    Self::eval_binary(&left.evaluate()?, &right.evaluate()?, &op, operator.line)
-                } else {
-                    unreachable!()
-                }
-            }
-
-            Expr::Literal { value } => {
-                if let Token::Literal(value) = value.token {
-                    Ok(value)
-                } else {
-                    unreachable!()
-                }
-            }
+            } => Self::eval_binary(&left.evaluate()?, &right.evaluate()?, &operator, line),
+            Expr::Literal { value } => Ok(value),
         }
     }
 

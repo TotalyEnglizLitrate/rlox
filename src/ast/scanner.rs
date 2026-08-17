@@ -30,7 +30,11 @@ impl Scanner {
             self.advance();
             expr = Box::new(Expr::Binary {
                 left: expr,
-                operator: Box::new(tok),
+                operator: match tok.token {
+                    Token::Operator(op) => op,
+                    _ => unreachable!(),
+                },
+                line: tok.line,
                 right: self.comparison(),
             });
             tok = self.peek();
@@ -53,7 +57,11 @@ impl Scanner {
             self.advance();
             expr = Box::new(Expr::Binary {
                 left: expr,
-                operator: Box::new(tok),
+                operator: match tok.token {
+                    Token::Operator(op) => op,
+                    _ => unreachable!(),
+                },
+                line: tok.line,
                 right: self.term(),
             });
             tok = self.peek();
@@ -73,7 +81,11 @@ impl Scanner {
             self.advance();
             expr = Box::new(Expr::Binary {
                 left: expr,
-                operator: Box::new(tok),
+                operator: match tok.token {
+                    Token::Operator(op) => op,
+                    _ => unreachable!(),
+                },
+                line: tok.line,
                 right: self.factor(),
             });
             tok = self.peek();
@@ -93,7 +105,11 @@ impl Scanner {
             self.advance();
             expr = Box::new(Expr::Binary {
                 left: expr,
-                operator: Box::new(tok),
+                operator: match tok.token {
+                    Token::Operator(op) => op,
+                    _ => unreachable!(),
+                },
+                line: tok.line,
                 right: self.unary(),
             });
             tok = self.peek();
@@ -110,7 +126,11 @@ impl Scanner {
         ) {
             self.advance();
             return Box::new(Expr::Unary {
-                operator: Box::new(tok),
+                operator: match tok.token {
+                    Token::Operator(op) => op,
+                    _ => unreachable!(),
+                },
+                line: tok.line,
                 right: self.primary(),
             });
         }
@@ -128,14 +148,20 @@ impl Scanner {
         ) {
             self.advance();
             Box::new(Expr::Literal {
-                value: Box::new(tok),
+                value: match tok.token {
+                    Token::Literal(value) => value,
+                    _ => unreachable!(),
+                },
             })
         } else if matches!(tok.token, Token::Literal(_))
             && !matches!(tok.token, Token::Literal(Literal::IDENT(_)))
         {
             self.advance();
             Box::new(Expr::Literal {
-                value: Box::new(tok),
+                value: match tok.token {
+                    Token::Literal(value) => value,
+                    _ => unreachable!(),
+                },
             })
         } else if matches!(tok.token, Token::Punctuator(Punctuator::LParen)) {
             self.advance();
@@ -166,10 +192,7 @@ impl Scanner {
             self.synchronize();
 
             Box::new(Expr::Literal {
-                value: Box::new(TokenCtx {
-                    token: Token::Literal(Literal::NIL),
-                    ..tok
-                }),
+                value: Literal::NIL,
             })
         }
     }
