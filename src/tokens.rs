@@ -373,8 +373,7 @@ impl TokenCtx {
 impl Literal {
     pub(crate) fn truthy(&self) -> Self {
         match self {
-            Self::STRING(s) => s.is_empty().into(),
-            Self::NUMBER(num) => (num == &0f64).into(),
+            Self::STRING(_) | Self::NUMBER(_) => Self::TRUE,
             Self::NIL => Self::FALSE,
             Self::TRUE | Self::FALSE => self.clone(),
             Self::IDENT(_) => unimplemented!(),
