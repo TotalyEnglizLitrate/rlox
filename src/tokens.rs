@@ -1,5 +1,5 @@
 use std::{
-    fmt::Display, iter::Peekable, ops::{Add, Div, Mul, Neg, Not, Sub}, str::Chars
+    cmp::Ordering, fmt::Display, iter::Peekable, ops::{Add, Div, Mul, Neg, Not, Sub}, str::Chars
 };
 
 use crate::error::{Error, ErrorKind};
@@ -455,7 +455,7 @@ impl Div for &Literal {
     }
 }
 
-impl PartialEq for &Literal {
+impl PartialEq for Literal {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (Literal::NUMBER(x), Literal::NUMBER(y)) => x == y,
@@ -467,35 +467,15 @@ impl PartialEq for &Literal {
             _ => false,
         }
     }
-
-    fn ne(&self, other: &Self) -> bool {
-        !self.eq(other)
-    }
 }
 
-impl PartialOrd for &Literal {
-    fn partial_cmp(&self, _other: &Self) -> Option<std::cmp::Ordering> {
-        None
-    }
-
-    fn le(&self, other: &Self) -> bool {
+impl PartialOrd for Literal {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         match (self, other) {
-            (Literal::NUMBER(x), Literal::NUMBER(y)) => x <= y,
-            (Literal::STRING(x), Literal::STRING(y)) => x <= y,
-            _ => panic!()
+            (Literal::NUMBER(x), Literal::NUMBER(y)) => x.partial_cmp(y),
+            (Literal::STRING(x), Literal::STRING(y)) => x.partial_cmp(y),
+            _ => None
         }
-    }
-
-    fn lt(&self, other: &Self) -> bool {
-        self != other && self.le(other)
-    }
-
-    fn gt(&self, other: &Self) -> bool {
-        !self.le(other)
-    }
-
-    fn ge(&self, other: &Self) -> bool {
-        self == other || self.gt(other)
     }
 }
 

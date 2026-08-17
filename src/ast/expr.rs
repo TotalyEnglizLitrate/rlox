@@ -1,4 +1,4 @@
-use std::ops::Deref;
+use std::{cmp::Ordering, ops::Deref};
 
 use crate::{
     error::{Error, ErrorKind},
@@ -56,7 +56,11 @@ impl Expr {
                     unreachable!()
                 }
             }
-            Expr::Binary { left, operator, right } => {
+            Expr::Binary {
+                left,
+                operator,
+                right,
+            } => {
                 if let Token::Operator(op) = operator.token {
                     Self::eval_binary(&left.evaluate()?, &right.evaluate()?, &op, operator.line)
                 } else {
@@ -70,7 +74,7 @@ impl Expr {
                 } else {
                     unreachable!()
                 }
-            },
+            }
         }
     }
 
@@ -115,33 +119,26 @@ impl Expr {
         op: &Operator,
         line: usize,
     ) -> Result<Literal, Error> {
-        let res = std::panic::catch_unwind(|| match op {
-            Operator::MINUS => (left - right).ok_or(Expr::op_error(right, left, op, line)),
-            Operator::PLUS => (left + right).ok_or(Expr::op_error(right, left, op, line)),
-            Operator::STAR => (left * right).ok_or(Expr::op_error(right, left, op, line)),
-            Operator::SLASH => (left / right).ok_or(Expr::op_error(right, left, op, line)),
+        match op {
+            Operator::MINUS => (left - right).ok_or_else(|| Expr::op_error(left, right, op, line)),
+            Operator::PLUS => (left + right).ok_or_else(|| Expr::op_error(left, right, op, line)),
+            Operator::STAR => (left * right).ok_or_else(|| Expr::op_error(left, right, op, line)),
+            Operator::SLASH => (left / right).ok_or_else(|| Expr::op_error(left, right, op, line)),
             Operator::EQ => Ok((left == right).into()),
             Operator::NE => Ok((left != right).into()),
-            Operator::GREATER => Ok((left > right).into()),
-            Operator::LESSER => Ok((left < right).into()),
-            Operator::GE => Ok((left >= right).into()),
-            Operator::LE => Ok((left <= right).into()),
+            Operator::GREATER => left.partial_cmp(right)
+                .ok_or_else(|| Expr::op_error(left, right, op, line))
+                .map(|ord| (ord == Ordering::Greater).into()),
+            Operator::LESSER => left.partial_cmp(right)
+                .ok_or_else(|| Expr::op_error(left, right, op, line))
+                .map(|ord| (ord == Ordering::Less).into()),
+            Operator::GE => left.partial_cmp(right)
+                .ok_or_else(|| Expr::op_error(left, right, op, line))
+                .map(|ord| matches!(ord, Ordering::Greater | Ordering::Equal).into()),
+            Operator::LE => left.partial_cmp(right)
+                .ok_or_else(|| Expr::op_error(left, right, op, line))
+                .map(|ord| matches!(ord, Ordering::Less | Ordering::Equal).into()),
             _ => todo!(),
-        });
-
-        match res {
-            Ok(res) => res,
-            Err(_) => Err(Error::new(
-                line,
-                "".into(),
-                format!(
-                    "Unsupported operation {:?} between types {} and {}",
-                    op,
-                    left.get_type(),
-                    right.get_type()
-                ),
-                ErrorKind::TypeError,
-            )),
         }
     }
 }
