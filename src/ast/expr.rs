@@ -58,7 +58,7 @@ impl Expr {
             }
             Expr::Binary { left, operator, right } => {
                 if let Token::Operator(op) = operator.token {
-                    Self::eval_binary(&right.evaluate()?, &left.evaluate()?, &op, operator.line)
+                    Self::eval_binary(&left.evaluate()?, &right.evaluate()?, &op, operator.line)
                 } else {
                     unreachable!()
                 }
@@ -110,8 +110,8 @@ impl Expr {
     }
 
     fn eval_binary(
-        right: &Literal,
         left: &Literal,
+        right: &Literal,
         op: &Operator,
         line: usize,
     ) -> Result<Literal, Error> {
