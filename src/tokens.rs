@@ -55,7 +55,7 @@ pub enum Literal {
     TRUE,
     FALSE,
     NIL,
-    IDENT(String),
+    IDENT(Box<str>),
     STRING(String),
     NUMBER(f64),
 }
@@ -261,7 +261,7 @@ impl TokenCtx {
             "true" => Ok(Token::Literal(Literal::TRUE)),
             "var" => Ok(Token::Keyword(Keyword::VAR)),
             "while" => Ok(Token::Keyword(Keyword::WHILE)),
-            _ => Ok(Token::Literal(Literal::IDENT(ident))),
+            _ => Ok(Token::Literal(Literal::IDENT(Box::from(ident)))),
         }
     }
 

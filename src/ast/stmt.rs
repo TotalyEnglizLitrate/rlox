@@ -1,15 +1,12 @@
-use std::io::{stdout, Write};
-
-use crate::{ast::expr::Expr, error::Error};
+use crate::{ast::expr::Expr, error::Error, tokens::Literal};
 
 type Block = Vec<Box<Stmt>>;
 
 #[derive(Debug)]
 pub enum Stmt {
     Print(Expr),
-    Assignment(Expr),
+    Declaration(Literal, Option<Expr>),
     Expr(Expr),
-    If(Expr, Block),
 }
 
 impl Stmt {
@@ -28,9 +25,10 @@ impl Stmt {
                 } else {
                     Ok(())
                 }
+            },
+            Stmt::Declaration(_, _) => {
+                unimplemented!()
             }
-            Stmt::Assignment(_) => unimplemented!(),
-            Stmt::If(_, _) => unimplemented!(),
         }
     }
 }

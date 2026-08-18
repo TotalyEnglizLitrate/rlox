@@ -1,21 +1,12 @@
-use crate::ast::{expr::Expr, stmt::Stmt};
+use super::Scanner;
+use super::multi_matches;
+
+use crate::ast::expr::Expr;
 use crate::error::{Error, ErrorKind};
 use crate::tokens::{Keyword, Literal, Operator, Punctuator, Token, TokenCtx};
 
-macro_rules! multi_matches {
-    ($expr:expr, $($pattern:pat_param)|+ $(if $guard:expr)?) => {
-        matches!($expr, $($pattern)|+ $(if $guard)?)
-    };
-}
-
-pub struct Scanner {
-    tokens: Box<[TokenCtx]>,
-    pos: usize,
-    errors: Vec<Error>,
-}
-
 impl Scanner {
-    fn expression(&mut self) -> Box<Expr> {
+    pub fn expression(&mut self) -> Box<Expr> {
         self.equality()
     }
 
@@ -197,41 +188,6 @@ impl Scanner {
         }
     }
 
-    pub fn new(tokens: Box<[TokenCtx]>) -> Self {
-        Scanner {
-            tokens,
-            pos: 0,
-            errors: Vec::new(),
-        }
-    }
-    pub fn parse(mut self) -> Result<Vec<Stmt>, Vec<Error>> {
-        let mut statements = Vec::new();
-
-        while !matches!(self.peek().token, Token::EOF) {
-            match self.statement() {
-                Some(stmt) => statements.push(stmt),
-                None => break,
-            }
-        }
-
-        if self.errors.is_empty() {
-            Ok(statements)
-        } else {
-            Err(self.errors)
-        }
-    }
-
-    fn peek(&self) -> TokenCtx {
-        self.tokens[self.pos].clone()
-    }
-
-    fn advance(&mut self) {
-        if matches!(self.peek().token, Token::EOF) {
-            return;
-        }
-        self.pos += 1;
-    }
-
     fn synchronize(&mut self) {
         self.advance();
         let mut tok = self.peek().token;
@@ -259,39 +215,6 @@ impl Scanner {
 
             self.advance();
             tok = self.peek().token;
-        }
-    }
-
-    fn expect_semicolon(&mut self) -> bool {
-        let tok = self.peek();
-        if matches!(tok.token, Token::Punctuator(Punctuator::SEMICOLON)) {
-            self.advance();
-            true
-        } else {
-            self.errors.push(Error::new(
-                tok.line,
-                "".into(),
-                format!("Expected ';', found {:?}", tok.token),
-                ErrorKind::SyntaxError,
-            ));
-            false
-        }
-    }
-
-    fn statement(&mut self) -> Option<Stmt> {
-        let tok = self.peek().token;
-
-        let stmt = if matches!(tok, Token::Keyword(Keyword::PRINT)) {
-            self.advance();
-            Stmt::Print(*self.expression())
-        } else {
-            Stmt::Expr(*self.expression())
-        };
-
-        if self.expect_semicolon() {
-            Some(stmt)
-        } else {
-            None
         }
     }
 }
