@@ -1,4 +1,4 @@
-use std::io::{Write, stdout};
+use std::io::{stdout, Write};
 
 use crate::{ast::expr::Expr, error::Error};
 
@@ -15,14 +15,12 @@ pub enum Stmt {
 impl Stmt {
     pub(crate) fn parse(self) -> Result<(), Error> {
         match self {
-            Stmt::Print(expr) => {
-                match expr.evaluate() {
-                    Ok(val) => {
-                        println!("{}", val);
-                        Ok(())
-                    },
-                    Err(err) => Err(err)
+            Stmt::Print(expr) => match expr.evaluate() {
+                Ok(val) => {
+                    println!("{}", val);
+                    Ok(())
                 }
+                Err(err) => Err(err),
             },
             Stmt::Expr(expr) => {
                 if let Err(err) = expr.evaluate() {
@@ -30,7 +28,7 @@ impl Stmt {
                 } else {
                     Ok(())
                 }
-            },
+            }
             Stmt::Assignment(_) => unimplemented!(),
             Stmt::If(_, _) => unimplemented!(),
         }
