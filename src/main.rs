@@ -18,7 +18,7 @@ struct CliOptions {
     #[arg()]
     input_file: Option<PathBuf>,
     #[arg(short, long, default_value_t = false, action = SetTrue)]
-    debug: bool
+    debug: bool,
 }
 
 fn main() {
@@ -53,22 +53,24 @@ fn run(src: &str, interpreted: bool, debug: bool) {
         }
     };
 
-    if debug {println!("{:?}", tokens);}
+    if debug {
+        println!("{:?}", tokens);
+    }
 
-    let ast = match ast::scanner::Scanner::new(tokens).parse_expression() {
-        Ok(Some(ast)) => ast,
-        Ok(None) => return,
+    let stmts = match ast::scanner::Scanner::new(tokens).parse() {
+        Ok(stmts) => stmts,
         Err(mut err) => {
             print_errs(src, err.iter_mut(), true, interpreted);
             return;
         }
     };
 
-    if debug {println!("{:?}", ast);}
+    if debug {
+        println!("{:?}", stmts);
+    }
 
-    match ast.evaluate() {
-        Ok(lit) => println!("{}", &lit),
-        Err(err) => {
+    for stmt in stmts {
+        if let Err(err) = stmt.parse() {
             print_errs(src, vec![err].iter_mut(), true, interpreted);
         }
     }

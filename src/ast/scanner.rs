@@ -1,4 +1,4 @@
-use super::expr::Expr;
+use crate::ast::{expr::Expr, stmt::Stmt};
 use crate::error::{Error, ErrorKind};
 use crate::tokens::{Keyword, Literal, Operator, Punctuator, Token, TokenCtx};
 
@@ -204,17 +204,20 @@ impl Scanner {
             errors: Vec::new(),
         }
     }
+    pub fn parse(mut self) -> Result<Vec<Stmt>, Vec<Error>> {
+        let mut statements = Vec::new();
 
-    pub fn parse_expression(mut self) -> Result<Option<Box<Expr>>, Vec<Error>> {
-        if self.tokens.len() == 0 {
-            return Ok(None);
+        while !matches!(self.peek().token, Token::EOF) {
+            match self.statement() {
+                Some(stmt) => statements.push(stmt),
+                None => break,
+            }
         }
-        let expr = self.expression();
-        let errors = self.errors;
-        if errors.len() != 0 {
-            Err(errors)
+
+        if self.errors.is_empty() {
+            Ok(statements)
         } else {
-            Ok(Some(expr))
+            Err(self.errors)
         }
     }
 
@@ -256,6 +259,39 @@ impl Scanner {
 
             self.advance();
             tok = self.peek().token;
+        }
+    }
+
+    fn expect_semicolon(&mut self) -> bool {
+        let tok = self.peek();
+        if matches!(tok.token, Token::Punctuator(Punctuator::SEMICOLON)) {
+            self.advance();
+            true
+        } else {
+            self.errors.push(Error::new(
+                tok.line,
+                "".into(),
+                format!("Expected ';', found {:?}", tok.token),
+                ErrorKind::SyntaxError,
+            ));
+            false
+        }
+    }
+
+    fn statement(&mut self) -> Option<Stmt> {
+        let tok = self.peek().token;
+
+        let stmt = if matches!(tok, Token::Keyword(Keyword::PRINT)) {
+            self.advance();
+            Stmt::Print(*self.expression())
+        } else {
+            Stmt::Expr(*self.expression())
+        };
+
+        if self.expect_semicolon() {
+            Some(stmt)
+        } else {
+            None
         }
     }
 }

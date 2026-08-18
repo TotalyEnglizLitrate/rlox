@@ -11,6 +11,15 @@ pub struct Error {
     pub(crate) kind: ErrorKind,
 }
 
+impl std::fmt::Display for ErrorKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ErrorKind::SyntaxError => write!(f, "SyntaxError"),
+            ErrorKind::TypeError => write!(f, "TypeError"),
+        }
+    }
+}
+
 impl Error {
     pub fn new(line: usize, content: String, msg: String, kind: ErrorKind) -> Self {
         Self {
@@ -23,10 +32,10 @@ impl Error {
 
     pub fn message(&self, interpreted: bool) -> String {
         if interpreted {
-            format!("{:?}: {}\n{}\n", self.kind, self.msg, self.content)
+            format!("{}: {}\n{}\n", self.kind, self.msg, self.content)
         } else {
             format!(
-                "{:?}: {}\n{} | {}\n",
+                "{}: {}\n{} | {}\n",
                 self.kind, self.msg, self.line, self.content
             )
         }
