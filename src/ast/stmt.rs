@@ -1,4 +1,4 @@
-use crate::{ast::expr::Expr, error::Error, tokens::Literal};
+use crate::{ast::expr::Expr, environment::Environment, error::Error, tokens::Literal};
 
 type Block = Vec<Box<Stmt>>;
 
@@ -10,7 +10,7 @@ pub enum Stmt {
 }
 
 impl Stmt {
-    pub(crate) fn parse(self) -> Result<(), Error> {
+    pub(crate) fn parse(self, env: &mut Environment) -> Result<(), Error> {
         match self {
             Stmt::Print(expr) => match expr.evaluate() {
                 Ok(val) => {
@@ -25,9 +25,24 @@ impl Stmt {
                 } else {
                     Ok(())
                 }
-            },
-            Stmt::Declaration(_, _) => {
-                unimplemented!()
+            }
+            Stmt::Declaration(name, expr) => {
+                if let Literal::IDENT(name) = name {
+                    match expr
+                        .unwrap_or(Expr::Literal {
+                            value: Literal::NIL,
+                        })
+                        .evaluate()
+                    {
+                        Ok(val) => {
+                            env.define(name, val);
+                            Ok(())
+                        }
+                        Err(err) => Err(err),
+                    }
+                } else {
+                    unreachable!()
+                }
             }
         }
     }

@@ -22,19 +22,15 @@ macro_rules! consume {
             $parser.errors.push(Error::new(
                 ctx.line,
                 "".into(),
-                format!(
-                    "Expected {}, found {:?}",
-                    stringify!($expected),
-                    ctx.token
-                ),
+                format!("Expected {}, found {:?}", stringify!($expected), ctx.token),
                 ErrorKind::SyntaxError,
             ));
             false
         }
     }};
 }
-pub(crate) use multi_matches;
 pub(crate) use consume;
+pub(crate) use multi_matches;
 
 pub struct Scanner {
     tokens: Box<[TokenCtx]>,

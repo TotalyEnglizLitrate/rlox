@@ -7,10 +7,11 @@ use std::{
 use clap::{ArgAction::SetTrue, Parser};
 
 mod ast;
+mod environment;
 mod error;
 mod tokens;
 
-use crate::{error::Error, tokens::TokenCtx};
+use crate::{environment::Environment, error::Error, tokens::TokenCtx};
 
 #[derive(Parser)]
 #[command(about = "lox - from crafting interpreters")]
@@ -44,7 +45,7 @@ fn print_errs(src: &str, err: std::slice::IterMut<Error>, contextualise: bool, i
     }
 }
 
-fn run(src: &str, interpreted: bool, debug: bool) {
+fn run(src: &str, env: &mut Environment, interpreted: bool, debug: bool) {
     let tokens = match TokenCtx::from_str(src) {
         Ok(tokens) => tokens.into_boxed_slice(),
         Err(mut err) => {
@@ -70,7 +71,7 @@ fn run(src: &str, interpreted: bool, debug: bool) {
     }
 
     for stmt in stmts {
-        if let Err(err) = stmt.parse() {
+        if let Err(err) = stmt.parse(env) {
             print_errs(src, vec![err].iter_mut(), true, interpreted);
         }
     }
@@ -78,18 +79,20 @@ fn run(src: &str, interpreted: bool, debug: bool) {
 
 fn run_file(path: &PathBuf, debug: bool) {
     let mut src = String::new();
+    let mut environment = Environment::new();
     File::open(path)
         .expect("Unable to open file")
         .read_to_string(&mut src)
         .expect("Unable to read file");
     src.push('\0');
 
-    run(&src, false, debug);
+    run(&src, &mut environment, false, debug);
 }
 
 fn run_interpreter(debug: bool) {
     let mut reader = stdin().lock();
     let mut line = String::new();
+    let mut environment = Environment::new();
 
     loop {
         print!(">> ");
@@ -115,7 +118,7 @@ fn run_interpreter(debug: bool) {
             }
         }
 
-        run(&line, true, debug);
+        run(&line, &mut environment, true, debug);
 
         line.clear();
     }

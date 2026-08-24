@@ -1,10 +1,10 @@
-use super::Scanner;
 use super::consume;
+use super::Scanner;
 
 use crate::ast::stmt::Stmt;
 use crate::error::{Error, ErrorKind};
 use crate::tokens::Operator;
-use crate::tokens::{Keyword, Punctuator, Token, Literal};
+use crate::tokens::{Keyword, Literal, Punctuator, Token};
 
 impl Scanner {
     pub fn statement(&mut self) -> Option<Stmt> {
@@ -28,14 +28,13 @@ impl Scanner {
         }
     }
 
-    fn expr(&mut self)  -> Option<Stmt> {
+    fn expr(&mut self) -> Option<Stmt> {
         let stmt = Stmt::Expr(*self.expression());
         if consume!(self, Token::Punctuator(Punctuator::SEMICOLON)) {
             Some(stmt)
         } else {
             None
         }
-
     }
 
     fn decl(&mut self) -> Option<Stmt> {
@@ -64,7 +63,7 @@ impl Scanner {
                 } else {
                     None
                 }
-            },
+            }
             token => {
                 self.errors.push(Error::new(
                     self.peek().line,

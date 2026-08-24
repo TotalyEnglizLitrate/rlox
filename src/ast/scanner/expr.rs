@@ -1,5 +1,5 @@
-use super::Scanner;
 use super::multi_matches;
+use super::Scanner;
 
 use crate::ast::expr::Expr;
 use crate::error::{Error, ErrorKind};

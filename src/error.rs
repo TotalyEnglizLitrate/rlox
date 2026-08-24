@@ -2,6 +2,7 @@
 pub enum ErrorKind {
     SyntaxError,
     TypeError,
+    RuntimeError,
 }
 
 pub struct Error {
@@ -16,6 +17,7 @@ impl std::fmt::Display for ErrorKind {
         match self {
             ErrorKind::SyntaxError => write!(f, "SyntaxError"),
             ErrorKind::TypeError => write!(f, "TypeError"),
+            ErrorKind::RuntimeError => write!(f, "RuntimeError"),
         }
     }
 }

@@ -531,7 +531,9 @@ impl Into<String> for &Literal {
             Literal::TRUE => "true".into(),
             Literal::FALSE => "false".into(),
             Literal::NIL => "nil".into(),
-            Literal::IDENT(_) => unimplemented!(),
+            Literal::IDENT(name) => {
+                unimplemented!()
+            },
         }
     }
 }
