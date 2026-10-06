@@ -6,6 +6,11 @@ use crate::{
 
 #[derive(Debug)]
 pub enum Expr {
+    Assign {
+        name: Literal,
+        line: usize,
+        value: Box<Expr>,
+    },
     Binary {
         left: Box<Expr>,
         operator: Operator,
@@ -29,6 +34,14 @@ pub enum Expr {
 impl Expr {
     pub fn evaluate(self, env: &mut Environment) -> Result<Literal, Error> {
         match self {
+            Expr::Assign { name, line, value } => {
+                if let Literal::IDENT(var) = name {
+                    let val = value.evaluate(env)?;
+                    env.assign(var, val, line)
+                } else {
+                    unreachable!()
+                }
+            }
             Expr::Grouping { expression } => expression.evaluate(env),
             Expr::Unary {
                 operator,
@@ -41,16 +54,10 @@ impl Expr {
                 line,
                 right,
             } => Self::eval_binary(&left.evaluate(env)?, &right.evaluate(env)?, &operator, line),
-            Expr::Literal { value, line } => {
-                match value {
-                    Literal::IDENT(var) => if let Ok(val) = env.get(var.clone()) {
-                        Ok(val)
-                    } else {
-                        Err(Error::new(line, "".into(), format!("Undefined Variable {:?}", var), ErrorKind::RuntimeError))
-                    },
-                    _ => Ok(value)
-                }
-            }
+            Expr::Literal { value, line } => match value {
+                Literal::IDENT(var) => env.get(var, line),
+                _ => Ok(value),
+            },
         }
     }
 

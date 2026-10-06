@@ -5,6 +5,7 @@ pub enum ErrorKind {
     RuntimeError,
 }
 
+#[derive(Debug)]
 pub struct Error {
     pub(crate) line: usize,
     pub(crate) content: String,

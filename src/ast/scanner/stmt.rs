@@ -15,23 +15,24 @@ impl Scanner {
         } else if matches!(tok, Token::Keyword(Keyword::VAR)) {
             self.decl()
         } else {
-            self.expr()
+            self.expr_stmt()
         }
     }
 
     fn print(&mut self) -> Option<Stmt> {
         self.advance();
-        if let Some(Stmt::Expr(expr)) = self.expr() {
-            Some(Stmt::Print(expr))
+        let expr = self.expression();
+        if consume!(self, Token::Punctuator(Punctuator::SEMICOLON)) {
+            Some(Stmt::Print(*expr))
         } else {
             None
         }
     }
 
-    fn expr(&mut self) -> Option<Stmt> {
-        let stmt = Stmt::Expr(*self.expression());
+    fn expr_stmt(&mut self) -> Option<Stmt> {
+        let expr = self.expression();
         if consume!(self, Token::Punctuator(Punctuator::SEMICOLON)) {
-            Some(stmt)
+            Some(Stmt::Expr(*expr))
         } else {
             None
         }
@@ -58,11 +59,8 @@ impl Scanner {
             Token::Punctuator(Punctuator::SEMICOLON) => None,
             Token::Operator(Operator::ASSIGN) => {
                 self.advance();
-                if let Some(Stmt::Expr(expr)) = self.expr() {
-                    Some(expr)
-                } else {
-                    None
-                }
+                let expr = self.expression();
+                Some(*expr)
             }
             token => {
                 self.errors.push(Error::new(
@@ -75,8 +73,10 @@ impl Scanner {
             }
         };
 
-        self.advance();
-
-        Some(Stmt::Declaration(Literal::IDENT(name), expr))
+        if consume!(self, Token::Punctuator(Punctuator::SEMICOLON)) {
+            Some(Stmt::Declaration(Literal::IDENT(name), expr))
+        } else {
+            None
+        }
     }
 }

@@ -7,7 +7,38 @@ use crate::tokens::{Keyword, Literal, Operator, Punctuator, Token, TokenCtx};
 
 impl Scanner {
     pub fn expression(&mut self) -> Box<Expr> {
-        self.equality()
+        self.assignment()
+    }
+
+    fn assignment(&mut self) -> Box<Expr> {
+        let expr = self.equality();
+
+        if matches!(self.peek().token, Token::Operator(Operator::ASSIGN)) {
+            let tok = self.peek();
+            self.advance();
+            let value = self.assignment();
+
+            if let Expr::Literal {
+                value: Literal::IDENT(name),
+                line: _,
+            } = *expr
+            {
+                return Box::new(Expr::Assign {
+                    name: Literal::IDENT(name),
+                    line: tok.line,
+                    value,
+                });
+            }
+
+            self.errors.push(Error::new(
+                tok.line,
+                "".into(),
+                "Invalid assignment target.".into(),
+                ErrorKind::SyntaxError,
+            ));
+        }
+
+        expr
     }
 
     fn equality(&mut self) -> Box<Expr> {
@@ -143,7 +174,7 @@ impl Scanner {
                     Token::Literal(value) => value,
                     _ => unreachable!(),
                 },
-                line: tok.line
+                line: tok.line,
             })
         } else if matches!(tok.token, Token::Literal(_)) {
             self.advance();
@@ -152,7 +183,7 @@ impl Scanner {
                     Token::Literal(value) => value,
                     _ => unreachable!(),
                 },
-                line: tok.line
+                line: tok.line,
             })
         } else if matches!(tok.token, Token::Punctuator(Punctuator::LParen)) {
             self.advance();
@@ -184,7 +215,7 @@ impl Scanner {
 
             Box::new(Expr::Literal {
                 value: Literal::NIL,
-                line: tok.line
+                line: tok.line,
             })
         }
     }

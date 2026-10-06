@@ -1,6 +1,5 @@
 use crate::{ast::expr::Expr, environment::Environment, error::Error, tokens::Literal};
 
-type Block = Vec<Box<Stmt>>;
 
 #[derive(Debug)]
 pub enum Stmt {
@@ -19,30 +18,23 @@ impl Stmt {
                 }
                 Err(err) => Err(err),
             },
-            Stmt::Expr(expr) => {
-                match expr.evaluate(env) {
-                    Ok(val) => {
-                        if interpreted { println!("{}", val); }
-                        Ok(())
+            Stmt::Expr(expr) => match expr.evaluate(env) {
+                Ok(val) => {
+                    if interpreted {
+                        println!("{}", val);
                     }
-                    Err(err) => Err(err),
+                    Ok(())
                 }
+                Err(err) => Err(err),
             },
             Stmt::Declaration(name, expr) => {
-                if let Literal::IDENT(name) = name {
-                    match expr
-                        .unwrap_or(Expr::Literal {
-                            value: Literal::NIL,
-                            line: 0
-                        })
-                        .evaluate(env)
-                    {
-                        Ok(val) => {
-                            env.define(name, val);
-                            Ok(())
-                        }
-                        Err(err) => Err(err),
-                    }
+                if let Literal::IDENT(var) = name {
+                    let val = match expr {
+                        Some(e) => e.evaluate(env)?,
+                        None => Literal::NIL,
+                    };
+                    env.define(var, val);
+                    Ok(())
                 } else {
                     unreachable!()
                 }
