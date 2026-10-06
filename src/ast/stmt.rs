@@ -10,7 +10,7 @@ pub enum Stmt {
 }
 
 impl Stmt {
-    pub(crate) fn parse(self, env: &mut Environment) -> Result<(), Error> {
+    pub(crate) fn parse(self, env: &mut Environment, interpreted: bool) -> Result<(), Error> {
         match self {
             Stmt::Print(expr) => match expr.evaluate(env) {
                 Ok(val) => {
@@ -20,12 +20,14 @@ impl Stmt {
                 Err(err) => Err(err),
             },
             Stmt::Expr(expr) => {
-                if let Err(err) = expr.evaluate(env) {
-                    Err(err)
-                } else {
-                    Ok(())
+                match expr.evaluate(env) {
+                    Ok(val) => {
+                        if interpreted { println!("{}", val); }
+                        Ok(())
+                    }
+                    Err(err) => Err(err),
                 }
-            }
+            },
             Stmt::Declaration(name, expr) => {
                 if let Literal::IDENT(name) = name {
                     match expr

@@ -71,7 +71,7 @@ fn run(src: &str, env: &mut Environment, interpreted: bool, debug: bool) {
     }
 
     for stmt in stmts {
-        if let Err(err) = stmt.parse(env) {
+        if let Err(err) = stmt.parse(env, interpreted) {
             print_errs(src, vec![err].iter_mut(), true, interpreted);
         }
     }
