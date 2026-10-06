@@ -144,9 +144,7 @@ impl Scanner {
                     _ => unreachable!(),
                 },
             })
-        } else if matches!(tok.token, Token::Literal(_))
-            && !matches!(tok.token, Token::Literal(Literal::IDENT(_)))
-        {
+        } else if matches!(tok.token, Token::Literal(_)) {
             self.advance();
             Box::new(Expr::Literal {
                 value: match tok.token {

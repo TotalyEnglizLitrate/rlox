@@ -12,7 +12,7 @@ pub enum Stmt {
 impl Stmt {
     pub(crate) fn parse(self, env: &mut Environment) -> Result<(), Error> {
         match self {
-            Stmt::Print(expr) => match expr.evaluate() {
+            Stmt::Print(expr) => match expr.evaluate(env) {
                 Ok(val) => {
                     println!("{}", val);
                     Ok(())
@@ -20,7 +20,7 @@ impl Stmt {
                 Err(err) => Err(err),
             },
             Stmt::Expr(expr) => {
-                if let Err(err) = expr.evaluate() {
+                if let Err(err) = expr.evaluate(env) {
                     Err(err)
                 } else {
                     Ok(())
@@ -32,7 +32,7 @@ impl Stmt {
                         .unwrap_or(Expr::Literal {
                             value: Literal::NIL,
                         })
-                        .evaluate()
+                        .evaluate(env)
                     {
                         Ok(val) => {
                             env.define(name, val);

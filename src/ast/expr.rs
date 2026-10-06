@@ -1,8 +1,7 @@
 use std::cmp::Ordering;
 
 use crate::{
-    error::{Error, ErrorKind},
-    tokens::{Literal, Operator},
+    environment::Environment, error::{Error, ErrorKind}, tokens::{Literal, Operator},
 };
 
 #[derive(Debug)]
@@ -27,21 +26,26 @@ pub enum Expr {
 }
 
 impl Expr {
-    pub fn evaluate(self) -> Result<Literal, Error> {
+    pub fn evaluate(self, env: &mut Environment) -> Result<Literal, Error> {
         match self {
-            Expr::Grouping { expression } => expression.evaluate(),
+            Expr::Grouping { expression } => expression.evaluate(env),
             Expr::Unary {
                 operator,
                 line,
                 right,
-            } => Self::eval_unary(&operator, &right.evaluate()?, line),
+            } => Self::eval_unary(&operator, &right.evaluate(env)?, line),
             Expr::Binary {
                 left,
                 operator,
                 line,
                 right,
-            } => Self::eval_binary(&left.evaluate()?, &right.evaluate()?, &operator, line),
-            Expr::Literal { value } => Ok(value),
+            } => Self::eval_binary(&left.evaluate(env)?, &right.evaluate(env)?, &operator, line),
+            Expr::Literal { value } => {
+                match value {
+                    Literal::IDENT(var) => env.get(var).into(),
+                    _ => Ok(value)
+                }
+            }
         }
     }
 
