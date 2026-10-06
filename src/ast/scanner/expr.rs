@@ -143,6 +143,7 @@ impl Scanner {
                     Token::Literal(value) => value,
                     _ => unreachable!(),
                 },
+                line: tok.line
             })
         } else if matches!(tok.token, Token::Literal(_)) {
             self.advance();
@@ -151,6 +152,7 @@ impl Scanner {
                     Token::Literal(value) => value,
                     _ => unreachable!(),
                 },
+                line: tok.line
             })
         } else if matches!(tok.token, Token::Punctuator(Punctuator::LParen)) {
             self.advance();
@@ -182,6 +184,7 @@ impl Scanner {
 
             Box::new(Expr::Literal {
                 value: Literal::NIL,
+                line: tok.line
             })
         }
     }

@@ -17,6 +17,7 @@ pub enum Expr {
     },
     Literal {
         value: Literal,
+        line: usize,
     },
     Unary {
         operator: Operator,
@@ -40,9 +41,13 @@ impl Expr {
                 line,
                 right,
             } => Self::eval_binary(&left.evaluate(env)?, &right.evaluate(env)?, &operator, line),
-            Expr::Literal { value } => {
+            Expr::Literal { value, line } => {
                 match value {
-                    Literal::IDENT(var) => env.get(var).into(),
+                    Literal::IDENT(var) => if let Ok(val) = env.get(var.clone()) {
+                        Ok(val)
+                    } else {
+                        Err(Error::new(line, "".into(), format!("Undefined Variable {:?}", var), ErrorKind::RuntimeError))
+                    },
                     _ => Ok(value)
                 }
             }

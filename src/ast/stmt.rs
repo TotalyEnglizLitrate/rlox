@@ -33,6 +33,7 @@ impl Stmt {
                     match expr
                         .unwrap_or(Expr::Literal {
                             value: Literal::NIL,
+                            line: 0
                         })
                         .evaluate(env)
                     {
