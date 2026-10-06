@@ -79,7 +79,7 @@ fn run(src: &str, env: &mut Environment, interpreted: bool, debug: bool) {
 
 fn run_file(path: &PathBuf, debug: bool) {
     let mut src = String::new();
-    let mut environment = Environment::new();
+    let mut environment = Environment::new(None);
     File::open(path)
         .expect("Unable to open file")
         .read_to_string(&mut src)
@@ -92,7 +92,7 @@ fn run_file(path: &PathBuf, debug: bool) {
 fn run_interpreter(debug: bool) {
     let mut reader = stdin().lock();
     let mut line = String::new();
-    let mut environment = Environment::new();
+    let mut environment = Environment::new(None);
 
     loop {
         print!(">> ");
